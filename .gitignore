@@ -1,0 +1,14 @@
+node_modules
+# Node.js
+api/node_modules/
+
+# Environment variables - chứa mật khẩu
+api/.env
+
+# Flutter
+TaskManager/.dart_tool/
+TaskManager/build/
+TaskManager/.flutter-plugins
+TaskManager/.flutter-plugins-dependencies
+TaskManager/.packages
+TaskManager/.metadata
