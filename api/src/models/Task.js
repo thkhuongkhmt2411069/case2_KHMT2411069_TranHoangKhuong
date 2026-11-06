@@ -24,7 +24,18 @@ const taskSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         default: null
-    }
+    },
+    sharedWith: [{
+        user: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        },
+        role: {
+            type: String,
+            enum: ['viewer', 'editor'],
+            default: 'viewer'
+        }
+    }]
 }, { timestamps: true });
 
 module.exports = mongoose.model('Task', taskSchema);

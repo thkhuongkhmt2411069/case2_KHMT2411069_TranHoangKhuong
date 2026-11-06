@@ -8,7 +8,8 @@ const {
     getTasks,
     updateTask,
     deleteTask,
-    assignTask
+    assignTask,
+    shareTask
 } = require('../controllers/taskController');
 
 // Tạo công việc
@@ -25,5 +26,8 @@ router.delete('/:id', protect, deleteTask);
 
 // Giao công việc
 router.put('/:id/assign', protect, assignTask);
+
+// Chia sẻ công việc
+router.put('/:id/share', protect, shareTask);
 
 module.exports = router;
