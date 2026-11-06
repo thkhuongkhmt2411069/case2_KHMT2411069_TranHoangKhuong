@@ -1,4 +1,5 @@
 const Task = require('../models/Task');
+const User = require('../models/User');
 
 // 1. Tạo công việc
 const createTask = async (req, res) => {
@@ -6,7 +7,9 @@ const createTask = async (req, res) => {
         const { title, description } = req.body;
 
         if (!title) {
-            return res.status(400).json({ message: 'Vui lòng nhập tiêu đề công việc' });
+            return res.status(400).json({
+                message: 'Vui lòng nhập tiêu đề công việc'
+            });
         }
 
         const task = await Task.create({
@@ -27,7 +30,13 @@ const createTask = async (req, res) => {
 // 2. Xem danh sách công việc
 const getTasks = async (req, res) => {
     try {
-        const tasks = await Task.find({ createdBy: req.user.id }).sort({ createdAt: -1 });
+        const tasks = await Task.find({
+            $or: [
+                { createdBy: req.user.id },
+                { assignedTo: req.user.id }
+            ]
+        }).sort({ createdAt: -1 });
+
         res.json(tasks);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -44,7 +53,9 @@ const updateTask = async (req, res) => {
         );
 
         if (!task) {
-            return res.status(404).json({ message: 'Không tìm thấy công việc' });
+            return res.status(404).json({
+                message: 'Không tìm thấy công việc'
+            });
         }
 
         res.json({
@@ -65,7 +76,9 @@ const deleteTask = async (req, res) => {
         });
 
         if (!task) {
-            return res.status(404).json({ message: 'Không tìm thấy công việc' });
+            return res.status(404).json({
+                message: 'Không tìm thấy công việc'
+            });
         }
 
         res.json({ message: 'Xóa công việc thành công' });
@@ -74,4 +87,55 @@ const deleteTask = async (req, res) => {
     }
 };
 
-module.exports = { createTask, getTasks, updateTask, deleteTask };
+// 5. Giao công việc
+const assignTask = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({
+                message: 'Vui lòng nhập email thành viên'
+            });
+        }
+
+        const task = await Task.findOne({
+            _id: req.params.id,
+            createdBy: req.user.id
+        });
+
+        if (!task) {
+            return res.status(404).json({
+                message: 'Không tìm thấy công việc'
+            });
+        }
+
+        const user = await User.findOne({
+            email: email.trim().toLowerCase()
+        });
+
+        if (!user) {
+            return res.status(404).json({
+                message: 'Không tìm thấy thành viên'
+            });
+        }
+
+        task.assignedTo = user._id;
+        await task.save();
+        await task.populate('assignedTo', 'name email');
+
+        res.json({
+            message: 'Giao công việc thành công',
+            task
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+module.exports = {
+    createTask,
+    getTasks,
+    updateTask,
+    deleteTask,
+    assignTask
+};

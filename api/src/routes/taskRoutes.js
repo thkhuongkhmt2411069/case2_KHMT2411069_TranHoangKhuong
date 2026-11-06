@@ -7,7 +7,8 @@ const {
     createTask,
     getTasks,
     updateTask,
-    deleteTask
+    deleteTask,
+    assignTask
 } = require('../controllers/taskController');
 
 // Tạo công việc
@@ -21,5 +22,8 @@ router.put('/:id', protect, updateTask);
 
 // Xóa công việc
 router.delete('/:id', protect, deleteTask);
+
+// Giao công việc
+router.put('/:id/assign', protect, assignTask);
 
 module.exports = router;
