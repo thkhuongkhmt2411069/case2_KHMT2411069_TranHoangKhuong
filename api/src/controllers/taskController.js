@@ -1,6 +1,7 @@
 
 const Task = require('../models/Task');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
 
 // 1. Tạo công việc
 const createTask = async (req, res) => {
@@ -28,7 +29,7 @@ const createTask = async (req, res) => {
     }
 };
 
-// 2. Xem công việc của mình, được giao và được chia sẻ
+// 2. Xem công việc
 const getTasks = async (req, res) => {
     try {
         const tasks = await Task.find({
@@ -87,7 +88,7 @@ const updateTask = async (req, res) => {
     }
 };
 
-// 4. Xóa công việc (chỉ chủ sở hữu)
+// 4. Xóa công việc
 const deleteTask = async (req, res) => {
     try {
         const task = await Task.findOneAndDelete({
@@ -107,7 +108,7 @@ const deleteTask = async (req, res) => {
     }
 };
 
-// 5. Giao công việc
+// 5. Giao công việc và tạo thông báo
 const assignTask = async (req, res) => {
     try {
         const { email } = req.body;
@@ -141,6 +142,15 @@ const assignTask = async (req, res) => {
 
         task.assignedTo = user._id;
         await task.save();
+
+        await Notification.create({
+            recipient: user._id,
+            sender: req.user.id,
+            task: task._id,
+            message: 'Bạn được giao công việc: ' + task.title,
+            type: 'assigned'
+        });
+
         await task.populate('assignedTo', 'name email');
 
         res.json({
@@ -152,7 +162,7 @@ const assignTask = async (req, res) => {
     }
 };
 
-// 6. Chia sẻ công việc với Viewer hoặc Editor
+// 6. Chia sẻ công việc và tạo thông báo
 const shareTask = async (req, res) => {
     try {
         const { email, role } = req.body;
@@ -210,6 +220,16 @@ const shareTask = async (req, res) => {
         }
 
         await task.save();
+
+        await Notification.create({
+            recipient: user._id,
+            sender: req.user.id,
+            task: task._id,
+            message: existingShare
+                ? 'Quyền truy cập công việc "' + task.title + '" đã được đổi thành ' + role
+                : 'Bạn được chia sẻ công việc: ' + task.title,
+            type: existingShare ? 'role_updated' : 'shared'
+        });
 
         res.json({
             message: 'Chia sẻ công việc thành công',
