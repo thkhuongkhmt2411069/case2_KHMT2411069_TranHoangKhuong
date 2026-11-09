@@ -111,4 +111,20 @@ class ApiService {
 
     return result;
   }
+
+  // Xóa công việc
+  static Future<void> deleteTask(String id) async {
+    final token = await getToken();
+
+    final response = await http.delete(
+      Uri.parse('$baseUrl/tasks/$id'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Xóa công việc thất bại');
+    }
+  }
 }

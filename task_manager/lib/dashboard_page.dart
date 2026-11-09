@@ -300,6 +300,61 @@ class _DashboardPageState extends State<DashboardPage> {
     descriptionController.dispose();
   }
 
+  // Xóa công việc
+  Future<void> showDeleteTaskDialog(dynamic task) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Xác nhận xóa'),
+          content: Text(
+            'Bạn có chắc chắn muốn xóa công việc "${task['title']}" không?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Hủy'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Xóa'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm != true) return;
+
+    try {
+      await ApiService.deleteTask(task['_id'].toString());
+
+      if (!mounted) return;
+
+      await loadTasks();
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Xóa công việc thành công'),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Lỗi: $error'),
+        ),
+      );
+    }
+  }
+
   int countStatus(String status) {
     return tasks.where((task) => task['status'] == status).length;
   }
@@ -437,6 +492,14 @@ class _DashboardPageState extends State<DashboardPage> {
                           ),
                           const SizedBox(width: 8),
                           const Icon(Icons.edit, size: 18),
+                          IconButton(
+                            tooltip: 'Xóa công việc',
+                            onPressed: () => showDeleteTaskDialog(task),
+                            icon: const Icon(
+                              Icons.delete_outline,
+                              color: Colors.red,
+                            ),
+                          ),
                         ],
                       ),
                     ),
