@@ -355,6 +355,97 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
+  // Giao công việc cho thành viên
+  Future<void> showAssignTaskDialog(dynamic task) async {
+    final emailController = TextEditingController();
+
+    await showDialog(
+      context: context,
+      builder: (dialogContext) {
+        bool isSaving = false;
+
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Giao công việc'),
+              content: TextField(
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  labelText: 'Email thành viên',
+                  hintText: 'example@gmail.com',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isSaving
+                      ? null
+                      : () => Navigator.pop(dialogContext),
+                  child: const Text('Hủy'),
+                ),
+                ElevatedButton(
+                  onPressed: isSaving
+                      ? null
+                      : () async {
+                          final email = emailController.text.trim();
+
+                          if (email.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Vui lòng nhập email'),
+                              ),
+                            );
+                            return;
+                          }
+
+                          setDialogState(() => isSaving = true);
+
+                          try {
+                            final result = await ApiService.assignTask(
+                              task['_id'].toString(),
+                              email,
+                            );
+
+                            if (!mounted) return;
+
+                            Navigator.pop(dialogContext);
+                            await loadTasks();
+
+                            if (!mounted) return;
+
+                            ScaffoldMessenger.of(this.context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  result['message'] ??
+                                      'Giao công việc thành công',
+                                ),
+                              ),
+                            );
+                          } catch (error) {
+                            setDialogState(() => isSaving = false);
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Lỗi: $error'),
+                              ),
+                            );
+                          }
+                        },
+                  child: isSaving
+                      ? const CircularProgressIndicator()
+                      : const Text('Giao việc'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    emailController.dispose();
+  }
+
   int countStatus(String status) {
     return tasks.where((task) => task['status'] == status).length;
   }
@@ -491,7 +582,14 @@ class _DashboardPageState extends State<DashboardPage> {
                             style: const TextStyle(fontSize: 12),
                           ),
                           const SizedBox(width: 8),
-                          const Icon(Icons.edit, size: 18),
+                          IconButton(
+                            tooltip: 'Giao công việc',
+                            onPressed: () => showAssignTaskDialog(task),
+                            icon: const Icon(
+                              Icons.person_add_alt_1,
+                              color: Colors.blue,
+                            ),
+                          ),
                           IconButton(
                             tooltip: 'Xóa công việc',
                             onPressed: () => showDeleteTaskDialog(task),

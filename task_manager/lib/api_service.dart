@@ -127,4 +127,34 @@ class ApiService {
       throw Exception('Xóa công việc thất bại');
     }
   }
+
+  // Giao công việc cho thành viên
+  static Future<Map<String, dynamic>> assignTask(
+    String taskId,
+    String email,
+  ) async {
+    final token = await getToken();
+
+    final response = await http.put(
+      Uri.parse('$baseUrl/tasks/$taskId/assign'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'email': email,
+      }),
+    );
+
+    final result =
+        jsonDecode(response.body) as Map<String, dynamic>;
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        result['message'] ?? 'Giao công việc thất bại',
+      );
+    }
+
+    return result;
+  }
 }
