@@ -63,15 +63,27 @@ class _LoginPageState extends State<LoginPage> {
       if (result['token'] != null) {
         final token = await ApiService.getToken();
 
+        if (!mounted) return;
+
         if (token != null && token.isNotEmpty) {
-          debugPrint('TOKEN ĐÃ ĐƯỢC LƯU');
+          debugPrint('ĐĂNG NHẬP THÀNH CÔNG');
 
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => const DashboardPage(),
+              builder: (context) => DashboardPage(
+                onLogout: () {
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(
+                      builder: (context) => const LoginPage(),
+                    ),
+                    (route) => false,
+                  );
+                },
+              ),
             ),
           );
+
           return;
         }
       }
